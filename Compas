@@ -1,3 +1,5 @@
+---Компас как в тундре---WarThunder Compass---
+------- made by @krimas - discord-------------
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local Player = Players.LocalPlayer
@@ -15,12 +17,12 @@ compassFrame.Position = UDim2.new(0.375, 0, 0, -85)
 compassFrame.BackgroundTransparency = 1
 compassFrame.Parent = compassGui
 
--- Центральный маркер направления (красная линия)
+-- Центральный маркер направления 
 local centerMarker = Instance.new("TextLabel")
 centerMarker.Text = "△"
 centerMarker.Name = "CenterMarker"
 centerMarker.Size = UDim2.new(0, 15, 0, 15)  -- Удлиннил центральную линию
-centerMarker.Position = UDim2.new(0.5, 0, 0, 70)
+centerMarker.Position = UDim2.new(0.5, -7, 0, 72)
 centerMarker.ZIndex = 3
 centerMarker.Parent = compassFrame
 centerMarker.BackgroundTransparency = 1
