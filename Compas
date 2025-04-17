@@ -1,0 +1,196 @@
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local Player = Players.LocalPlayer
+
+-- Создаем GUI для компаса
+local compassGui = Instance.new("ScreenGui")
+compassGui.Name = "CompassGui"
+compassGui.Parent = Player:WaitForChild("PlayerGui")
+
+-- Основной контейнер компаса (1/4 экрана по центру)
+local compassFrame = Instance.new("Frame")
+compassFrame.Name = "CompassFrame"
+compassFrame.Size = UDim2.new(0.25, 0, 0, 80)  -- Увеличил высоту для отметок
+compassFrame.Position = UDim2.new(0.375, 0, 0, -85)
+compassFrame.BackgroundTransparency = 1
+compassFrame.Parent = compassGui
+
+-- Центральный маркер направления (красная линия)
+local centerMarker = Instance.new("TextLabel")
+centerMarker.Text = "△"
+centerMarker.Name = "CenterMarker"
+centerMarker.Size = UDim2.new(0, 15, 0, 15)  -- Удлиннил центральную линию
+centerMarker.Position = UDim2.new(0.5, 0, 0, 70)
+centerMarker.ZIndex = 3
+centerMarker.Parent = compassFrame
+centerMarker.BackgroundTransparency = 1
+centerMarker.TextSize = 20
+centerMarker.TextColor3 = Color3.fromRGB(0, 255, 0)
+
+local centerMarkerStroke = Instance.new("UIStroke")
+centerMarkerStroke.Name = "centerMarkerStroke"
+centerMarkerStroke.Color = Color3.new(0, 0.333333, 0)
+centerMarkerStroke.Thickness = 1
+centerMarkerStroke.Parent = centerMarker
+---
+
+
+-- Создаем маркеры каждые 15 градусов и основные направления
+local directions = {}
+for degree = 0, 345, 15 do
+	local text = ""
+
+	-- Основные направления
+	if degree == 0 then text = "N"
+	elseif degree == 90 then text = "E"
+	elseif degree == 180 then text = "S"
+	elseif degree == 270 then text = "W"
+	else text = tostring(degree)
+	end
+
+	table.insert(directions, {
+		text = text,
+		degree = degree
+	})
+end
+
+-- Создаем элементы компаса
+for _, dir in ipairs(directions) do
+	-- Текстовый маркер
+	local marker = Instance.new("TextLabel")
+	marker.Name = "Marker_" .. dir.degree
+	marker.Size = UDim2.new(0, 40, 0, 20)
+	marker.AnchorPoint = Vector2.new(0.5, 0.5)
+	marker.Position = UDim2.new(0.5, 0, 0.5, 0)
+	marker.BackgroundTransparency = 1
+	marker.Text = dir.text
+	marker.TextColor3 = Color3.fromRGB(0, 255, 0)  -- Белый текст для лучшей видимости
+	marker.Font = Enum.Font.Oswald
+	marker.TextSize = 25
+
+	-- Черная обводка текста (толще для лучшей читаемости)
+	local textStroke = Instance.new("UIStroke")
+	textStroke.Name = "TextStroke"
+	textStroke.Color = Color3.new(0, 0.333333, 0)
+	textStroke.Thickness = 1
+	textStroke.Parent = marker
+
+	-- Длинная градусная отметка под цифрой
+	local longTick = Instance.new("Frame")
+	longTick.Name = "LongTick"
+	longTick.Size = UDim2.new(0, 2, 0, 15)
+	longTick.AnchorPoint = Vector2.new(0.5, 0)
+	longTick.Position = UDim2.new(0.5, 0, 1, 0)
+	longTick.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
+	longTick.BorderSizePixel = 0
+	longTick.ZIndex = 2
+	longTick.Parent = marker
+
+	marker.Parent = compassFrame
+
+	local longTickStroke = Instance.new("UIStroke")
+	longTickStroke.Name = "TextStroke"
+	longTickStroke.Color = Color3.new(0, 0.333333, 0)
+	longTickStroke.Thickness = 1
+	longTickStroke.Parent = longTick
+end
+
+-- Создаем короткие отметки между основными (каждые 5 градусов)
+for degree = 0, 355, 5 do
+	-- Пропускаем основные направления (они уже созданы)
+	if degree % 15 ~= 0 then
+		local shortTick = Instance.new("Frame")
+		shortTick.Name = "ShortTick_" .. degree
+		shortTick.Size = UDim2.new(0, 2, 0, 7)
+		shortTick.AnchorPoint = Vector2.new(0.5, 0.5)
+		shortTick.Position = UDim2.new(0.5, 0, 1, 0)
+		shortTick.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
+		shortTick.BorderSizePixel = 0
+		shortTick.ZIndex = 1
+		shortTick.Parent = compassFrame
+		local shortTickStroke = Instance.new("UIStroke")
+		shortTickStroke.Name = "TextStroke"
+		shortTickStroke.Color = Color3.new(0, 0.333333, 0)
+		shortTickStroke.Thickness = 1
+		shortTickStroke.Parent = shortTick
+	end
+end
+
+
+
+-- Функция обновления компаса
+local function updateCompass()
+	local character = Player.Character
+	if not character then return end
+
+	local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
+	if not humanoidRootPart then return end
+
+	local camera = workspace.CurrentCamera
+	if not camera then return end
+
+	-- Получаем угол поворота камеры (азимут)
+	local cameraCFrame = camera.CFrame
+	local _, yAngle = cameraCFrame:ToEulerAnglesYXZ()
+	local degrees = math.deg(yAngle) % 360
+
+	-- Обновляем позиции основных маркеров
+	for _, dir in ipairs(directions) do
+		local marker = compassFrame:FindFirstChild("Marker_" .. dir.degree)
+		if marker then
+			-- Вычисляем относительную позицию
+			local relativeDegree = (dir.degree - degrees + 180) % 360 - 180
+
+			-- Позиционируем маркер только если он в пределах видимости
+			if math.abs(relativeDegree) <= 90 then
+				local screenPosition = relativeDegree / 90  -- от -1 до 1
+
+				marker.Position = UDim2.new(0.5 + screenPosition * 0.5, 0, 0.5, 0)
+				marker.TextTransparency = 0  -- Всегда полностью видимый
+
+				-- Обводка тоже полностью видимая
+				local stroke = marker:FindFirstChild("TextStroke")
+				if stroke then
+					stroke.Transparency = 0
+				end
+
+				-- Длинная отметка
+				local longTick = marker:FindFirstChild("LongTick")
+				if longTick then
+					longTick.BackgroundTransparency = 0
+				end
+
+				marker.Visible = true
+			else
+				marker.Visible = false
+			end
+		end
+	end
+
+	-- Обновляем позиции коротких отметок
+	for degree = 0, 355, 5 do
+		if degree % 15 ~= 0 then
+			local shortTick = compassFrame:FindFirstChild("ShortTick_" .. degree)
+			if shortTick then
+				local relativeDegree = (degree - degrees + 180) % 360 - 180
+
+				if math.abs(relativeDegree) <= 90 then
+					local screenPosition = relativeDegree / 90
+					shortTick.Position = UDim2.new(0.5 + screenPosition * 0.5, 0, 0.5, 20)
+					shortTick.BackgroundTransparency = 0
+					shortTick.Visible = true
+				else
+					shortTick.Visible = false
+				end
+			end
+		end
+	end
+end
+
+-- Подключаем обновление компаса
+RunService.RenderStepped:Connect(updateCompass)
+
+-- Очистка при уничтожении персонажа
+Player.CharacterRemoving:Connect(function()
+	compassGui:Destroy()
+end)
