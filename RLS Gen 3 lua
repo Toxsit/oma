@@ -1,0 +1,72 @@
+---------RADAR GEN 2 SYSTEM--------
+---------MADE BY @krimas - discord-
+print("RLS GEN 2 v1")
+
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+
+local RscreenGui = Instance.new("ScreenGui")
+RscreenGui.Name = "ViewDirectionIndicator"
+RscreenGui.Parent = player.PlayerGui
+
+local rMAINFRAME = Instance.new("Frame")
+rMAINFRAME.Name = "MAINFRAME"
+rMAINFRAME.Transparency = 1
+rMAINFRAME.Position = UDim2.new(0, 0, 0, 0)
+rMAINFRAME.Size = UDim2.new(1, 0, 0.95, 0)
+rMAINFRAME.Parent = RscreenGui
+rMAINFRAME.AnchorPoint = Vector2.new(0, 0)
+-------------------------------------------------------
+local rviev = Instance.new("Frame")
+rviev.Name = "MAINFRAME"
+rviev.Transparency = 1
+rviev.Position = UDim2.new(0, 50, 0, -50) 
+rviev.Size = UDim2.new(0, 500, 0, 500) 
+rviev.Parent = RscreenGui
+rviev.AnchorPoint = Vector2.new(0, 0)
+
+-- кружок
+local circle = Instance.new("ImageLabel")
+circle.Name = "Circle"
+circle.Size = UDim2.new(0, 500, 0, 500)
+circle.Image = "rbxassetid://83734745918614" -- Circle image (can be replaced)
+circle.BackgroundTransparency = 1
+circle.Parent = rviev
+circle.AnchorPoint = Vector2.new(0.5, 0.5)
+circle.Position = UDim2.new(0.5, 0, 0.5, 0) 
+-- вайв зона
+local Vcircle = Instance.new("ImageLabel")
+Vcircle.Name = "Circle"
+Vcircle.Size = UDim2.new(0, 500, 0, 500)
+Vcircle.Image = "rbxassetid://111710895510031" -- Circle image (can be replaced)
+Vcircle.BackgroundTransparency = 1
+Vcircle.Parent = rviev
+Vcircle.AnchorPoint = Vector2.new(0.5, 0.5)
+Vcircle.Position = UDim2.new(0.5, 0, 0.5, 0) 
+
+
+local compassImage = Vcircle -- ImageLabel, который будет работать как компас
+local player = game.Players.LocalPlayer
+local camera = workspace.CurrentCamera
+
+-- Настройки:
+compassImage.AnchorPoint = Vector2.new(0.5, 0.5) -- Вращение вокруг центра
+compassImage.Position = UDim2.new(0.5, 0, 0.5, 0) -- Центр экрана
+
+-- Функция обновления компаса
+local function updateCompass()
+	if not camera then return end
+
+	-- Получаем направление камеры (игнорируем вертикальный наклон)
+	local cameraLookVector = camera.CFrame.LookVector
+	cameraLookVector = Vector3.new(cameraLookVector.X, 0, cameraLookVector.Z).Unit
+
+	-- Вычисляем угол поворота (в радианах)
+	local angle = math.atan2(cameraLookVector.X, cameraLookVector.Z)
+
+	-- Поворачиваем ImageLabel так, чтобы правый верхний угол указывал направление
+	compassImage.Rotation = math.deg(angle) + 135 -- 135° = правый верхний угол
+end
+
+-- Обновляем компас каждый кадр
+game:GetService("RunService").Heartbeat:Connect(updateCompass)
