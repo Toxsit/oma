@@ -1,5 +1,6 @@
 ---Компас как в тундре---WarThunder Compass---
 ------- made by @krimas - discord-------------
+-------------END VERSION----------------------
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local Player = Players.LocalPlayer
@@ -12,7 +13,7 @@ compassGui.Parent = Player:WaitForChild("PlayerGui")
 -- Основной контейнер компаса (1/4 экрана по центру)
 local compassFrame = Instance.new("Frame")
 compassFrame.Name = "CompassFrame"
-compassFrame.Size = UDim2.new(0.25, 0, 0, 80)  -- Увеличил высоту для отметок
+compassFrame.Size = UDim2.new(0.25, 0, 0, 80)  
 compassFrame.Position = UDim2.new(0.375, 0, 0, -85)
 compassFrame.BackgroundTransparency = 1
 compassFrame.Parent = compassGui
@@ -21,7 +22,7 @@ compassFrame.Parent = compassGui
 local centerMarker = Instance.new("TextLabel")
 centerMarker.Text = "△"
 centerMarker.Name = "CenterMarker"
-centerMarker.Size = UDim2.new(0, 15, 0, 15)  -- Удлиннил центральную линию
+centerMarker.Size = UDim2.new(0, 15, 0, 15)  
 centerMarker.Position = UDim2.new(0.5, -7, 0, 72)
 centerMarker.ZIndex = 3
 centerMarker.Parent = compassFrame
@@ -36,7 +37,6 @@ centerMarkerStroke.Thickness = 1
 centerMarkerStroke.Parent = centerMarker
 ---
 
-
 -- Создаем маркеры каждые 15 градусов и основные направления
 local directions = {}
 for degree = 0, 345, 15 do
@@ -44,10 +44,10 @@ for degree = 0, 345, 15 do
 
 	-- Основные направления
 	if degree == 0 then text = "N"
-	elseif degree == 90 then text = "E"
+	elseif degree == 90 then text = "E"  -- Изменено с E на W
 	elseif degree == 180 then text = "S"
-	elseif degree == 270 then text = "W"
-	else text = tostring(degree)
+	elseif degree == 270 then text = "W"  -- Изменено с W на E
+	else text = tostring((360 - -degree) % 360)  -- Инвертируем градусы
 	end
 
 	table.insert(directions, {
@@ -118,8 +118,6 @@ for degree = 0, 355, 5 do
 	end
 end
 
-
-
 -- Функция обновления компаса
 local function updateCompass()
 	local character = Player.Character
@@ -134,18 +132,18 @@ local function updateCompass()
 	-- Получаем угол поворота камеры (азимут)
 	local cameraCFrame = camera.CFrame
 	local _, yAngle = cameraCFrame:ToEulerAnglesYXZ()
-	local degrees = math.deg(yAngle) % 360
+	local degrees = (360 - math.deg(yAngle)) % 360  -- Инвертируем градусы
 
 	-- Обновляем позиции основных маркеров
 	for _, dir in ipairs(directions) do
 		local marker = compassFrame:FindFirstChild("Marker_" .. dir.degree)
 		if marker then
 			-- Вычисляем относительную позицию
-			local relativeDegree = (dir.degree - degrees + 180) % 360 - 180
+			local relativeDegree = (degrees - dir.degree + 180) % 360 - 180  -- Изменено направление расчета
 
 			-- Позиционируем маркер только если он в пределах видимости
 			if math.abs(relativeDegree) <= 90 then
-				local screenPosition = relativeDegree / 90  -- от -1 до 1
+				local screenPosition = relativeDegree / -90  -- от -1 до 1
 
 				marker.Position = UDim2.new(0.5 + screenPosition * 0.5, 0, 0.5, 0)
 				marker.TextTransparency = 0  -- Всегда полностью видимый
@@ -174,10 +172,10 @@ local function updateCompass()
 		if degree % 15 ~= 0 then
 			local shortTick = compassFrame:FindFirstChild("ShortTick_" .. degree)
 			if shortTick then
-				local relativeDegree = (degree - degrees + 180) % 360 - 180
+				local relativeDegree = (degrees - degree + 180) % 360 - 180  -- Изменено направление расчета
 
 				if math.abs(relativeDegree) <= 90 then
-					local screenPosition = relativeDegree / 90
+					local screenPosition = relativeDegree / -90
 					shortTick.Position = UDim2.new(0.5 + screenPosition * 0.5, 0, 0.5, 20)
 					shortTick.BackgroundTransparency = 0
 					shortTick.Visible = true
